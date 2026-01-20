@@ -1,3 +1,5 @@
+import FamilyTree from "../components/FamilyTree";
+
 export default function Home() {
-  return <div>Home</div>;
+  return <FamilyTree />;
 }
