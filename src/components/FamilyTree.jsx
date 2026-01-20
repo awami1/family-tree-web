@@ -1,104 +1,75 @@
 import familyData from "../data/family.json";
 
-const BOX_WIDTH = 140;
-const BOX_HEIGHT = 40;
-const H_GAP = 30;
-const V_GAP = 90;
-
 export default function FamilyTree() {
   const people = familyData.individuals;
 
-  // خريطة الأشخاص
-  const byId = Object.fromEntries(people.map(p => [p.id, p]));
-
-  // خريطة الأب → الأبناء
-  const childrenMap = {};
+  // تجميع حسب الجيل
+  const generations = {};
   people.forEach(p => {
-    if (p.parent_id) {
-      if (!childrenMap[p.parent_id]) childrenMap[p.parent_id] = [];
-      childrenMap[p.parent_id].push(p);
+    if (!generations[p.generation]) {
+      generations[p.generation] = [];
     }
+    generations[p.generation].push(p);
   });
 
-  // الجذور (بدون أب)
-  const roots = people.filter(p => !p.parent_id);
+  const sortedGenerations = Object.keys(generations)
+    .map(Number)
+    .sort((a, b) => a - b);
 
-  // نحسب عرض كل فرع
-  function subtreeWidth(person) {
-    const kids = childrenMap[person.id] || [];
-    if (kids.length === 0) return BOX_WIDTH;
-    return kids.reduce((sum, k) => sum + subtreeWidth(k), 0) +
-           (kids.length - 1) * H_GAP;
+  function getParentName(person) {
+    if (!person.parent_id) return null;
+    const parent = people.find(p => p.id === person.parent_id);
+    return parent ? parent.name : null;
   }
-
-  const nodes = [];
-  const lines = [];
-
-  function draw(person, x, level) {
-    const y = level * V_GAP + 40;
-
-    nodes.push(
-      <g key={person.id}>
-        <rect
-          x={x}
-          y={y}
-          width={BOX_WIDTH}
-          height={BOX_HEIGHT}
-          rx="8"
-          fill="#ffffff"
-          stroke="#333"
-        />
-        <text
-          x={x + BOX_WIDTH / 2}
-          y={y + 25}
-          textAnchor="middle"
-          fontSize="12"
-        >
-          {person.name}
-        </text>
-      </g>
-    );
-
-    const kids = childrenMap[person.id] || [];
-    let cursorX = x - subtreeWidth(person) / 2;
-
-    kids.forEach(child => {
-      const childWidth = subtreeWidth(child);
-      const childX = cursorX + childWidth / 2 - BOX_WIDTH / 2;
-      const childY = (level + 1) * V_GAP + 40;
-
-      lines.push(
-        <line
-          key={person.id + "-" + child.id}
-          x1={x + BOX_WIDTH / 2}
-          y1={y + BOX_HEIGHT}
-          x2={childX + BOX_WIDTH / 2}
-          y2={childY}
-          stroke="#555"
-        />
-      );
-
-      draw(child, childX, level + 1);
-      cursorX += childWidth + H_GAP;
-    });
-  }
-
-  let startX = 40;
-  roots.forEach(root => {
-    const w = subtreeWidth(root);
-    const rootX = startX + w / 2 - BOX_WIDTH / 2;
-    draw(root, rootX, 0);
-    startX += w + 80;
-  });
 
   return (
-    <svg
-      width="2500"
-      height="2000"
-      style={{ background: "#f5f5f5" }}
-    >
-      {lines}
-      {nodes}
-    </svg>
+    <div style={{ padding: "16px", background: "#f6f7f8" }}>
+      <h1 style={{ textAlign: "center", marginBottom: 24 }}>
+        شجرة العائلة
+      </h1>
+
+      {sortedGenerations.map(gen => (
+        <section key={gen} style={{ marginBottom: 32 }}>
+          <h2 style={{ marginBottom: 12 }}>
+            الجيل {gen}
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: "12px"
+            }}
+          >
+            {generations[gen].map(person => (
+              <div
+                key={person.id}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: 12,
+                  padding: 12,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)"
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    marginBottom: 6
+                  }}
+                >
+                  {person.name}
+                </div>
+
+                {getParentName(person) && (
+                  <div style={{ fontSize: 12, color: "#666" }}>
+                    ابن / بنت {getParentName(person)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
