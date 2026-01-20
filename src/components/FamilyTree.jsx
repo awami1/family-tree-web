@@ -3,34 +3,35 @@ import { OrgChart } from "d3-org-chart";
 import familyData from "../data/family.json";
 
 export default function FamilyTree() {
-  const chartRef = useRef(null);
+  const ref = useRef(null);
 
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!ref.current) return;
 
-    // تحويل الداتا إلى الشكل الذي تفهمه المكتبة
     const data = familyData.individuals.map((p) => ({
       id: p.id,
-      parentId: p.parent_id ?? null,
+      parentId: p.parent_id || null,
       name: p.name
     }));
 
     const chart = new OrgChart()
-      .container(chartRef.current)
+      .container(ref.current)
       .data(data)
-      .nodeHeight(() => 70)
       .nodeWidth(() => 180)
+      .nodeHeight(() => 80)
       .childrenMargin(() => 40)
       .nodeContent((d) => {
+        // ⚠️ مهم جدًا: xmlns يحل مشكلة Safari
         return `
-          <div style="
-            padding:10px;
-            border-radius:8px;
-            background:#ffffff;
-            border:1px solid #999;
-            text-align:center;
-            font-family:Arial;
-          ">
+          <div xmlns="http://www.w3.org/1999/xhtml"
+               style="
+                 background:#fff;
+                 border:1px solid #999;
+                 border-radius:8px;
+                 padding:8px;
+                 text-align:center;
+                 font-family:Arial;
+               ">
             ${d.data.name}
           </div>
         `;
@@ -42,8 +43,12 @@ export default function FamilyTree() {
 
   return (
     <div
-      ref={chartRef}
-      style={{ width: "100%", height: "100vh", background: "#f5f5f5" }}
+      ref={ref}
+      style={{
+        width: "100%",
+        height: "100vh",
+        background: "#f0f0f0"
+      }}
     />
   );
 }
