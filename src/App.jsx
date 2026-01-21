@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
-import AdminLogin from "./pages/AdminLogin";
 
 export default function App() {
   return (
